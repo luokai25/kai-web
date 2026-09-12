@@ -1,0 +1,35 @@
+name: Deploy Kai to Vercel
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy to Vercel Production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy to Vercel via API
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          echo "Encoding index.html..."
+          B64=$(base64 -w 0 index.html)
+          echo "Deploying to Vercel..."
+          RESPONSE=$(curl -s -X POST "https://api.vercel.com/v13/deployments" \
+            -H "Authorization: Bearer $VERCEL_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"name\": \"kai-assistant\",
+              \"target\": \"production\",
+              \"projectId\": \"prj_kyeamcKJKFtlFsVJneDPeuM3m34m\",
+              \"teamId\": \"team_JxWbvBnSPGfpgMzLBuVxK698\",
+              \"files\": [{\"file\": \"index.html\", \"data\": \"$B64\", \"encoding\": \"base64\"}],
+              \"projectSettings\": {\"framework\": null}
+            }")
+          echo "Response: $RESPONSE"
+          echo "Production: https://kai-assistant-hazel.vercel.app"
